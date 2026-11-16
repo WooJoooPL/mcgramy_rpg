@@ -297,6 +297,31 @@ class AudioBridgeServerTest {
     }
 
     @Test
+    void zalewPingamiRozlacza() throws Exception {
+        Tab tab = open();
+        for (int i = 0; i < 30 && tab.isOpen(); i++) {
+            tab.sendPing();
+        }
+        assertEquals(Protocol.CLOSE_RATE_LIMIT, tab.closeCode());
+    }
+
+    @Test
+    void ponowneLaczenieNieZerujeCzasuPozaGra() throws Exception {
+        Tab tab = open();
+        String resume = login(tab, "auth", tokens.issueLink(player));
+        server.setOnline(player, false);
+        now.addAndGet(50_000);
+        tab.closeBlocking();
+        awaitEvent("close:" + player);
+        now.addAndGet(61_000);
+        server.housekeep(); // sprzątanie co minutę nie może skasować licznika
+        Tab again = open();
+        login(again, "resume", resume);
+        server.housekeep();
+        assertEquals(Protocol.CLOSE_IDLE, again.closeCode());
+    }
+
+    @Test
     void limitPolaczenZJednegoIp() throws Exception {
         for (int i = 0; i < 4; i++) {
             open();

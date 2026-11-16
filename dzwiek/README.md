@@ -49,7 +49,8 @@ a podstawianie ich serwerów jest zabronione. Ten kod jest napisany od zera, bez
 | Jedna karta na gracza | nowa karta zamyka starą (kod 4002) i unieważnia jej token |
 | Wylogowanie | `/muzyka rozlacz` unieważnia wszystkie tokeny gracza i zamyka kartę |
 | Długo poza grą | po 15 min poza grą karta jest rozłączana (4005) |
-| Ochrona serwera | sprawdzanie `Origin`, limit połączeń (500, 4 na IP), 10 s na zalogowanie, 1 próba logowania na połączenie, blokada IP po 10 nieudanych próbach na minutę, ramka do 4 KB, 20 wiadomości na 10 s |
+| Ochrona serwera | sprawdzanie `Origin`, limit połączeń (500, 4 na IP), 10 s na zalogowanie, 1 próba logowania na połączenie, blokada IP po 10 nieudanych próbach na minutę, ramka do 4 KB, 20 wiadomości (także pingów) na 10 s |
+| Safari | strona tworzy stałą pulę 3 elementów audio odblokowaną pierwszym kliknięciem, więc kolejne utwory grają bez klikania |
 | Strona | CSP (tylko własne skrypty, audio z tego samego adresu), dane z serwera wstawiane jako tekst, ścieżki audio sprawdzane wyrażeniem regularnym, adres WebSocket nie da się podmienić linkiem (poza testami na localhost) |
 
 Co może zrobić ktoś, kto przechwyci link przed graczem: słyszeć muzykę tego gracza (czyli

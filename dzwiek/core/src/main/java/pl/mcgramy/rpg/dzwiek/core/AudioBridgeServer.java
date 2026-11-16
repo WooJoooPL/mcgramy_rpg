@@ -9,6 +9,7 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.exceptions.InvalidDataException;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.framing.CloseFrame;
+import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.ServerHandshakeBuilder;
 import org.java_websocket.server.WebSocketServer;
@@ -301,6 +302,21 @@ public final class AudioBridgeServer extends WebSocketServer {
         }
     }
 
+    /**
+     * Pingi od klienta też liczą się do limitu wiadomości: każdy ping wymusza odpowiedź,
+     * więc bez limitu klient, który nie czyta, zapychałby pamięć kolejką odpowiedzi.
+     * Przeglądarki same nie wysyłają pingów, więc zwykłej karty to nie dotyczy.
+     */
+    @Override
+    public void onWebsocketPing(WebSocket conn, Framedata frame) {
+        Conn c = conn.getAttachment();
+        if (c == null || !c.countMessage(clock.getAsLong(), settings.maxMessagesPer10s())) {
+            conn.close(Protocol.CLOSE_RATE_LIMIT, "rate");
+            return;
+        }
+        super.onWebsocketPing(conn, frame);
+    }
+
     @Override
     public void onMessage(WebSocket conn, java.nio.ByteBuffer message) {
         conn.close(Protocol.CLOSE_BAD_MESSAGE, "binary");
@@ -381,7 +397,11 @@ public final class AudioBridgeServer extends WebSocketServer {
                 lastCleanup = now;
                 tokens.cleanup();
                 failedAuth.cleanup();
-                offlineSince.keySet().removeIf(p -> !sessions.containsKey(p) && !online.contains(p));
+                // Nie czyścimy od razu: ponowne połączenie tokenem wznowienia nie może zerować
+                // licznika czasu poza grą. Wpisy bez karty usuwamy dopiero po dobie.
+                long keep = s.offlineTimeoutMs() + 24 * 3_600_000L;
+                offlineSince.entrySet().removeIf(e -> !sessions.containsKey(e.getKey())
+                        && !online.contains(e.getKey()) && now - e.getValue() > keep);
             }
         } catch (RuntimeException ex) {
             logger.log(Level.WARNING, "Błąd porządków serwera dźwięku", ex);

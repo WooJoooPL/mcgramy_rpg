@@ -100,7 +100,11 @@
   // ---------------------------------------------------------------- silnik dźwięku
   let ctx = null;
   let master, musicBus, sfxBus, analyser;
-  const decks = []; // { id, el, src, gain, stopping, timer }
+  const decks = []; // { id, slot, el, gain, stopping, timer }
+  // Stała pula elementów audio odblokowana kliknięciem. Safari pozwala grać bez kolejnego
+  // kliknięcia tylko elementom, które raz zagrały w trakcie gestu, więc ich nie tworzymy na nowo.
+  const pool = []; // { el, gain, busy }
+  let silentUrl = null;
   let current = null;
   const sfxCache = new Map();
   let sfxActive = 0;
@@ -158,12 +162,39 @@
     }
     applyVolumes();
     ctx.resume();
+    silentUrl = silentWav();
+    for (let i = 0; i < MAX_DECKS; i++) {
+      const el = new Audio();
+      el.preload = 'auto';
+      el.loop = true;
+      el.src = silentUrl;
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      ctx.createMediaElementSource(el).connect(gain);
+      gain.connect(musicBus);
+      const p = el.play();
+      if (p) p.then(() => el.pause()).catch(() => {});
+      pool.push({ el, gain, busy: false });
+    }
     S.unlocked = true;
     ui.unlock.hidden = true;
     ui.controls.hidden = false;
     preloadSfx();
     applyMusic();
     refreshStatus();
+  }
+
+  // 0,1 s ciszy (WAV) jako adres blob:, do odblokowania puli w trakcie kliknięcia
+  function silentWav() {
+    const n = 4800;
+    const buf = new ArrayBuffer(44 + n * 2);
+    const v = new DataView(buf);
+    const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 48000, true); v.setUint32(28, 96000, true); v.setUint16(32, 2, true);
+    v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, n * 2, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
   }
 
   function applyMusic() {
@@ -181,11 +212,11 @@
         back.stopping = false;
         ramp(back.gain.gain, S.catalog[target].v, fade);
       } else {
+        if (decks.length >= MAX_DECKS) dispose(decks[0]);
         const d = startDeck(target, fade);
         if (d) decks.push(d);
       }
     }
-    while (decks.length > MAX_DECKS) dispose(decks[0]);
     showTrack();
   }
 
@@ -196,16 +227,16 @@
       console.warn('Brak obsługiwanego pliku dla', id);
       return null;
     }
-    const el = new Audio();
-    el.preload = 'auto';
+    const slot = pool.find((x) => !x.busy);
+    if (!slot) return null;
+    slot.busy = true;
+    const el = slot.el;
+    const gain = slot.gain;
     el.loop = true;
     el.src = url;
-    const src = ctx.createMediaElementSource(el);
-    const gain = ctx.createGain();
-    gain.gain.value = 0;
-    src.connect(gain);
-    gain.connect(musicBus);
-    const d = { id, el, src, gain, stopping: false, timer: 0 };
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    const d = { id, slot, el, gain, stopping: false, timer: 0 };
     ramp(gain.gain, entry.v, fade);
     el.play().catch((err) => console.warn('Nie udało się odtworzyć', id, err));
     return d;
@@ -222,13 +253,11 @@
     clearTimeout(d.timer);
     try {
       d.el.pause();
-      d.el.removeAttribute('src');
-      d.el.load();
+      d.gain.gain.cancelScheduledValues(ctx.currentTime);
+      d.gain.gain.setValueAtTime(0, ctx.currentTime);
+      d.el.src = silentUrl; // element zostaje odblokowany do ponownego użycia
     } catch (e) { /* element już zwolniony */ }
-    try {
-      d.src.disconnect();
-      d.gain.disconnect();
-    } catch (e) { /* j.w. */ }
+    d.slot.busy = false;
     const i = decks.indexOf(d);
     if (i >= 0) decks.splice(i, 1);
   }
@@ -384,6 +413,7 @@
       return;
     }
     if (retry >= MAX_RETRIES) {
+      stopAllAudio();
       setStatus('Brak połączenia z serwerem. Wpisz /muzyka, gdy serwer wróci', 'err');
       return;
     }
