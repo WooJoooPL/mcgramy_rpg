@@ -1,0 +1,45 @@
+name: dzwiek
+
+on:
+  push:
+    paths:
+      - 'dzwiek/**'
+      - '.github/workflows/dzwiek.yml'
+  pull_request:
+    paths:
+      - 'dzwiek/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build i testy (rdzeń + plugin Paper 26.3)
+        run: mvn -B -ntp -f dzwiek/pom.xml verify
+
+      - name: Sprawdzenie YAML w jarze
+        run: |
+          cd dzwiek/plugin/target
+          unzip -o -q McRPGDzwiek-*.jar paper-plugin.yml config.yml -d yml
+          python3 -c "import yaml,sys; [yaml.safe_load(open(f, encoding='utf-8')) for f in sys.argv[1:]]; print('YAML OK')" yml/paper-plugin.yml yml/config.yml
+          unzip -l McRPGDzwiek-*.jar | grep -q 'pl/mcgramy/rpg/dzwiek/lib/websocket/' && echo 'WebSocket przeniesiony do pl.mcgramy.rpg.dzwiek.lib'
+
+      - name: Paczka strony
+        run: cd dzwiek/web && zip -r -q ../plugin/target/McRPGDzwiek-strona.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: McRPGDzwiek
+          path: |
+            dzwiek/plugin/target/McRPGDzwiek-*.jar
+            dzwiek/plugin/target/McRPGDzwiek-strona.zip
+          if-no-files-found: error

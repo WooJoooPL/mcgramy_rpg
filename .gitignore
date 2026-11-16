@@ -1,0 +1,8 @@
+target/
+*.class
+.idea/
+*.iml
+.vscode/
+zrzut_strony.png
+dzwiek/plugin/target/
+dzwiek/core/target/

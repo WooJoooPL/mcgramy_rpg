@@ -1,0 +1,103 @@
+# McRPGDzwiek: muzyka i dźwięki w przeglądarce
+# Gracz wpisuje /muzyka, dostaje jednorazowy link, strona łączy się z serwerem WebSocket
+# tego pluginu (przez nginx z HTTPS) i gra muzykę regionu oraz efekty wysyłane z gry.
+# Po zmianach: /rpgaudio reload (karty graczy połączą się same).
+
+# Adres strony z dźwiękiem (z ukośnikiem na końcu). Link z czatu to <public-url>#t=<token>.
+public-url: "https://mcgramy.pl/muzyka/"
+
+# Katalog z plikami audio, względem strony (pliki trzyma nginx, nie plugin).
+audio-base: "audio/"
+
+server:
+  # W kontenerze Pterodactyla 0.0.0.0. Port musi być dodatkowym portem (allocation) serwera,
+  # najlepiej wystawionym na hoście tylko na 127.0.0.1, bo publicznie wystawia go nginx.
+  bind-host: "0.0.0.0"
+  port: 8790
+  # Dozwolone nagłówki Origin. Pusta lista wyłącza sprawdzanie (tylko do testów!).
+  allowed-origins:
+    - "https://mcgramy.pl"
+  # Adresy proxy (nginx), od których czytamy prawdziwe IP z nagłówka X-Real-IP.
+  # 172.18.0.1 to brama sieci Dockera, przez którą nginx z hosta wchodzi do kontenera.
+  trusted-proxies:
+    - "127.0.0.1"
+    - "172.18.0.1"
+  max-connections: 500
+  max-connections-per-ip: 4
+  # Ile nieudanych logowań na minutę z jednego IP, zanim zablokujemy to IP na minutę.
+  max-failed-auth-per-minute: 10
+
+tokens:
+  # Ważność linku z czatu.
+  link-ttl-seconds: 300
+  # Jak długo po zerwaniu połączenia karta może połączyć się sama (np. restart serwera).
+  resume-ttl-seconds: 1800
+  # Po takim czasie poza grą karta jest rozłączana i potrzebny jest nowy link.
+  offline-timeout-seconds: 900
+
+# Odstęp między kolejnymi linkami jednego gracza.
+link-cooldown-seconds: 5
+# Co ile ticków sprawdzamy, w jakim regionie są gracze (10 = pół sekundy).
+region-check-ticks: 10
+# Domyślny czas płynnego przejścia muzyki (ms).
+default-fade-ms: 2500
+# Podpowiedź po wejściu na serwer, gdy gracz nie ma połączonej karty.
+join-hint: true
+
+# Katalog dźwięków. Klucz = id używane w regionach, komendach i API.
+#   kind: music (zapętlona muzyka) albo sfx (jednorazowy efekt)
+#   src: pliki względem audio-base; strona bierze pierwszy, który przeglądarka obsłuży
+#        (ogg = Opus, m4a = AAC dla Safari)
+#   volume: 0.0-1.0, title: nazwa pokazywana na stronie (tylko muzyka)
+sounds:
+  demo_miasto:
+    kind: music
+    title: "Miasto o świcie"
+    src: ["muzyka/demo_miasto.ogg", "muzyka/demo_miasto.m4a"]
+    volume: 0.8
+  demo_dzicz:
+    kind: music
+    title: "Dzika kraina"
+    src: ["muzyka/demo_dzicz.ogg", "muzyka/demo_dzicz.m4a"]
+    volume: 0.8
+  demo_boss:
+    kind: music
+    title: "Walka z bossem"
+    src: ["muzyka/demo_boss.ogg", "muzyka/demo_boss.m4a"]
+    volume: 0.9
+  demo_dzwon:
+    kind: sfx
+    src: ["efekty/demo_dzwon.ogg", "efekty/demo_dzwon.m4a"]
+    volume: 1.0
+  demo_ryk:
+    kind: sfx
+    src: ["efekty/demo_ryk.ogg", "efekty/demo_ryk.m4a"]
+    volume: 1.0
+
+# Muzyka całego świata (najniższy priorytet). Region i zdarzenia ją przykrywają.
+worlds:
+  world:
+    music: demo_dzicz
+
+# Regiony prostopadłościenne. Przy nakładaniu wygrywa wyższy priority.
+#   music: id utworu, "none" = cisza, brak klucza = region nie zmienia muzyki
+#   enter-sound: efekt odtwarzany przy wejściu (opcjonalnie)
+regions:
+  demo_miasto:
+    world: world
+    min: [-50, -64, -50]
+    max: [50, 320, 50]
+    priority: 10
+    music: demo_miasto
+    enter-sound: demo_dzwon
+
+messages:
+  prefix: "<#9C8CFF><bold>ᴍᴜᴢʏᴋᴀ</bold></#9C8CFF> <#4D4D4D>»</#4D4D4D> "
+  link: "<#D6D6D6>Dźwięk gry w przeglądarce: <link>"
+  link-label: "<#5CE1E6><bold>ᴏᴛᴡᴏʀᴢ</bold></#5CE1E6>"
+  link-hover: "<#8C8C8C>Link działa 5 minut i tylko raz<newline><#8C8C8C>Nie wysyłaj go nikomu"
+  cooldown: "<#FF5C5C>✖</#FF5C5C> <#D6D6D6>Odczekaj chwilę przed kolejnym linkiem"
+  unavailable: "<#FF5C5C>✖</#FF5C5C> <#D6D6D6>Dźwięk w przeglądarce jest chwilowo niedostępny"
+  connected: "<#5CE65C>✔</#5CE65C> <#D6D6D6>Dźwięk w przeglądarce połączony"
+  logged-out: "<#5CE65C>✔</#5CE65C> <#D6D6D6>Rozłączono dźwięk w przeglądarce"
+  join-hint: "<#D6D6D6>Włącz muzykę gry: <#5CE1E6><click:run_command:'/muzyka'>/muzyka</click></#5CE1E6>"
