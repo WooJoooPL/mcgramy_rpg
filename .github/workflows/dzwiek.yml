@@ -2,6 +2,7 @@ name: dzwiek
 
 on:
   push:
+    branches: [main]
     paths:
       - 'dzwiek/**'
       - '.github/workflows/dzwiek.yml'
