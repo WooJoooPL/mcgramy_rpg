@@ -1,0 +1,14 @@
+name: McRPGDzwiek
+version: '${project.version}'
+main: pl.mcgramy.rpg.dzwiek.DzwiekPlugin
+api-version: '1.21.11'
+description: 'McRPG: muzyka i dźwięki w przeglądarce przez WebSocket'
+author: mcgramy.pl
+website: https://mcgramy.pl
+permissions:
+  mcrpg.dzwiek.use:
+    description: 'Komenda /muzyka (link do dźwięku w przeglądarce)'
+    default: true
+  mcrpg.dzwiek.admin:
+    description: 'Komenda /rpgaudio (przeładowanie, testy, sterowanie muzyką)'
+    default: op

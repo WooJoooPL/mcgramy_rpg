@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' wss: ws://localhost:* ws://127.0.0.1:*; base-uri 'none'; form-action 'none'">
+  <meta name="robots" content="noindex">
+  <title>Dźwięk gry · mcgramy.pl</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <header>
+      <div class="logo">ᴍᴄɢʀᴀᴍʏ</div>
+      <h1>Dźwięk gry</h1>
+    </header>
+
+    <section class="status" aria-live="polite">
+      <span id="dot" class="dot dot-wait"></span>
+      <span id="status">Łączenie…</span>
+    </section>
+
+    <section id="player" class="player" hidden>
+      <div class="label">Gracz</div>
+      <div id="nick" class="value"></div>
+      <div class="label">Teraz gra</div>
+      <div id="track" class="value muted">cisza</div>
+    </section>
+
+    <button id="unlock" class="unlock" type="button" hidden>Włącz dźwięk</button>
+
+    <section id="controls" class="controls" hidden>
+      <label>Głośność <input id="vol-master" type="range" min="0" max="100" step="1"></label>
+      <label>Muzyka <input id="vol-music" type="range" min="0" max="100" step="1"></label>
+      <label>Efekty <input id="vol-sfx" type="range" min="0" max="100" step="1"></label>
+      <button id="mute" class="mute" type="button" aria-pressed="false">Wycisz</button>
+    </section>
+
+    <p id="hint" class="hint">Zostaw tę kartę otwartą podczas gry. Link z czatu działa raz; po zamknięciu karty wpisz w grze <code>/muzyka</code>.</p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

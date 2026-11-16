@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>pl.mcgramy.rpg</groupId>
+    <artifactId>dzwiek-parent</artifactId>
+    <version>0.1.0</version>
+    <packaging>pom</packaging>
+    <name>McRPG Dźwięk</name>
+
+    <!-- core: logika bez Bukkita (tokeny, sesje, WebSocket), testowana lokalnie na Javie 21.
+         plugin: warstwa Paper 1.21.11 (Java 21), budowana w GitHub Actions. -->
+    <modules>
+        <module>core</module>
+        <module>plugin</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java-websocket.version>1.6.0</java-websocket.version>
+        <gson.version>2.11.0</gson.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <junit.version>5.11.3</junit.version>
+    </properties>
+
+    <!-- Lokalnie (JDK < 25) budujemy i testujemy tylko rdzeń: mvn -pl core test -->
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.2</version>
+                    <dependencies>
+                        <!-- ASM obsługujący klasy Javy 25 (wersja pliku 69) -->
+                        <dependency>
+                            <groupId>org.ow2.asm</groupId>
+                            <artifactId>asm</artifactId>
+                            <version>9.11.1</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.ow2.asm</groupId>
+                            <artifactId>asm-commons</artifactId>
+                            <version>9.11.1</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
