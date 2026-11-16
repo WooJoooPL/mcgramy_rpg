@@ -1,6 +1,6 @@
 # McRPG (mcgramy.pl)
 
-Kod trybu MMORPG McRPG na mcgramy.pl (Paper 26.3).
+Kod trybu MMORPG McRPG na mcgramy.pl (Paper 1.21.11).
 
 | Katalog | Co |
 |---|---|

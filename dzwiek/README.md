@@ -16,7 +16,7 @@ a podstawianie ich serwerów jest zabronione. Ten kod jest napisany od zera, bez
 ## Jak to działa
 
 ```
- Gracz w grze                 serwer „mcgramy - MMORPG” (Paper 26.3)
+ Gracz w grze                 serwer „mcgramy - MMORPG” (Paper 1.21.11)
  /muzyka  ───────────────▶  McRPGDzwiek: token jednorazowy (5 min) → link na czacie
                              regiony, warstwy muzyki, API, komendy
                              wbudowany serwer WebSocket :8790 (tylko 127.0.0.1 hosta)
@@ -104,7 +104,7 @@ prostopadłościenne z priorytetem, muzyką i dźwiękiem wejścia (`regions`), 
 | Ścieżka | Co |
 |---|---|
 | `core/` | rdzeń bez Bukkita: tokeny, limity, warstwy muzyki, serwer WebSocket, protokół (Java 21, testy JUnit) |
-| `plugin/` | plugin Paper 26.3 (Java 25): config, regiony, komendy, API |
+| `plugin/` | plugin Paper 1.21.11 (Java 21): config, regiony, komendy, API |
 | `web/` | strona: `index.html`, `app.js`, `style.css`, `audio/` (syntezowane dźwięki demo, ok. 480 KB) |
 | `nginx/muzyka.conf` | wzór bloków nginx (do wgrania dopiero po zgodzie Zielu) |
 | `narzedzia/generuj_demo_audio.sh` | generator dźwięków demo (ffmpeg) |
@@ -112,7 +112,7 @@ prostopadłościenne z priorytetem, muzyką i dźwiękiem wejścia (`regions`), 
 
 ## Budowanie
 
-GitHub Actions (`.github/workflows/dzwiek.yml`) buduje jar na Javie 25 przy każdym pushu
+GitHub Actions (`.github/workflows/dzwiek.yml`) buduje jar w GitHub Actions przy każdym pushu
 i udostępnia `McRPGDzwiek-0.1.0.jar` oraz `McRPGDzwiek-strona.zip` jako artefakt.
 Lokalnie na starszej Javie da się zbudować i przetestować tylko rdzeń: `mvn -pl core test`.
 

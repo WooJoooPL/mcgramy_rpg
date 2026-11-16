@@ -24,7 +24,7 @@ jobs:
           java-version: '25'
           cache: maven
 
-      - name: Build i testy (rdzeń + plugin Paper 26.3)
+      - name: Build i testy (rdzeń + plugin Paper 1.21.11)
         run: mvn -B -ntp -f dzwiek/pom.xml verify
 
       - name: Sprawdzenie YAML w jarze
